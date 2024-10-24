@@ -1,26 +1,26 @@
 var express = require('express');
 var router = express.Router();
 var CampGroundModel = require('../models/CampGroundModel');
-const cloudinary = require('./cloudinary');
+const {cloudinary,deleteImage, deleteMultipleImages} = require('./cloudinary');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-      folder: 'CampGrounds',
-      allowed_formats: ['jpg', 'png', 'jpeg', 'gif']
-    }
-  });
-  
-// const storage = multer.diskStorage({
-//     destination: function (req, file, cb) {
-//       cb(null, 'public/uploads/');
-//     },
-//     filename: function (req, file, cb) {
-//       cb(null, Date.now() + '-' + file.originalname);
-//     },
+// const storage = new CloudinaryStorage({
+//     cloudinary: cloudinary,
+//     params: {
+//       folder: 'CampGrounds',
+//       allowed_formats: ['jpg', 'png', 'jpeg', 'gif']
+//     }
 //   });
+  
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'public/uploads/');
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now() + '-' + file.originalname);
+    },
+  });
 
 const upload = multer({ storage });
 
@@ -38,7 +38,7 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-router.post('/add', upload.array('images'), async (req, res, next) => {
+router.post('/', upload.array('images'), async (req, res, next) => {
     try { 
       if (!req.body.title || !req.body.description || !req.body.address) {
         return res.status(400).json({ error: "Title, description, and address are required." });
@@ -60,13 +60,38 @@ router.post('/add', upload.array('images'), async (req, res, next) => {
     }
   });
 
-router.delete('/delete/:id',async (req,res,next)=>{
+router.delete('/',async (req,res,next)=>{
     try{
-        var {id}=req.params;
-        var findFarm=await farmModel.findById(id);
-        var deleteProducts=await productModel.deleteMany({_id:{$in:findFarm.products}})
-        var deleteFarm=await farmModel.findByIdAndDelete(id);
-        res.send('Farm deleted successfully.'+findFarm);
+      console.log(req.body)
+        var {id}=req.body;
+        var findCampGround=await CampGroundModel.findById(id);
+        if(findCampGround){
+          if(findCampGround.images.length>1)
+          {
+            try {
+              const result = await deleteMultipleImages(findCampGround.images);
+              return res.status(200).json({ message: 'Images deleted successfully', result });
+            } catch (error) {
+              return res.status(500).json({ error: 'Failed to delete images', details: error.message });
+            }
+          }
+          else
+          {
+            try {
+              const result = await deleteImage(findCampGround.images);
+              return res.status(200).json({ message: 'Images deleted successfully', result });
+            } catch (error) {
+              return res.status(500).json({ error: 'Failed to delete images', details: error.message });
+            }
+          }
+         
+          await CampGroundModel.findByIdAndDelete(id);
+          res.status(201).send('Camp Ground deleted successfully.');
+        }
+        else
+        {
+          res.status(400).send({error:"Camp Ground not found."});
+        } 
     }
     catch(err){
         res.status(500).send(err.message);
