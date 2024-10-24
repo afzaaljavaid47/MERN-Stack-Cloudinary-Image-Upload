@@ -47,7 +47,7 @@ router.post('/add', upload.array('images'), async (req, res, next) => {
         title: req.body.title,
         description: req.body.description,
         address: req.body.address,
-        images: req.files.map(file => file.filename)
+        images: req.files.map(file => file.path)
       });  
       await newCampGround.save();
       res.status(201).json({
