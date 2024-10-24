@@ -155,7 +155,7 @@ const App = () => {
                     key={ind}
                   >
                     <img
-                      src={`http://localhost:5000/uploads/${img}`}
+                      src={`https://res.cloudinary.com/drqd2h01c/image/upload/v1729801412/${img}`}
                       className="d-block w-100"
                       alt={`Slide ${ind + 1}`}
                     />
@@ -164,7 +164,7 @@ const App = () => {
               ) : (
                 <div className="carousel-item active">
                   <img
-                    src={`http://localhost:5000/uploads/${item?.images?.[0]}`}
+                    src={`https://res.cloudinary.com/drqd2h01c/image/upload/v1729801412/${item?.images?.[0]}`}
                     className="d-block w-100"
                     alt="Default Slide"
                   />
